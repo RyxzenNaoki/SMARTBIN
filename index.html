@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Monitoring Sampah</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            margin-top: 5em;
+        }
+
+        .counter {
+            font-size: 3em;
+            color: green;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Jumlah Sampah Masuk</h1>
+    <div class="counter" id="jumlahSampah">0</div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
+    <script>
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCh-323pn0rAagXRgXwslRi2LoFq6xHKNs",
+            authDomain: "smartbin-b3035.firebaseapp.com",
+            projectId: "smartbin-b3035",
+            storageBucket: "smartbin-b3035.firebasestorage.app",
+            messagingSenderId: "337743596404",
+            appId: "1:337743596404:web:5ab1efe98b1a7505e5fa21",
+            measurementId: "G-19PFSY4ZD4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const jumlahSampahRef = db.ref("jumlah_sampah");
+        jumlahSampahRef.on("value", (snapshot) => {
+            const jumlah = snapshot.val();
+            document.getElementById("jumlahSampah").innerText = jumlah;
+        });
+    </script>
+</body>
+
+</html>
