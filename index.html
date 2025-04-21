@@ -19,31 +19,38 @@
 
 <body>
     <h1>Jumlah Sampah Masuk</h1>
-    <div class="counter" id="jumlahSampah">0</div>
+    <div class="counter" id="jumlahSampah">Memuat...</div>
 
-    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-database-compat.js"></script>
+    <!-- Firebase Modular SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
+        // Konfigurasi Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCh-323pn0rAagXRgXwslRi2LoFq6xHKNs",
             authDomain: "smartbin-b3035.firebaseapp.com",
             projectId: "smartbin-b3035",
-            storageBucket: "smartbin-b3035.firebasestorage.app",
+            storageBucket: "smartbin-b3035.appspot.com",
             messagingSenderId: "337743596404",
             appId: "1:337743596404:web:5ab1efe98b1a7505e5fa21",
             measurementId: "G-19PFSY4ZD4"
         };
 
+        // Inisialisasi Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        // Ambil referensi ke dokumen "sampah/counter"
         const jumlahRef = doc(db, "sampah", "counter");
 
-        onSnapshot(jumlahRef, (doc) => {
-            if (doc.exists()) {
-                document.getElementById("jumlahSampah").innerText = doc.data().jumlah;
+        // Dengarkan perubahan data secara realtime
+        onSnapshot(jumlahRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const jumlah = docSnap.data().jumlah;
+                document.getElementById("jumlahSampah").innerText = jumlah;
+            } else {
+                document.getElementById("jumlahSampah").innerText = "Data tidak ditemukan";
             }
         });
     </script>
