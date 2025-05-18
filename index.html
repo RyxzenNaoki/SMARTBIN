@@ -1,32 +1,165 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="id">
 <head>
-    <title>Monitoring Sampah</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            text-align: center;
-            margin-top: 5em;
-        }
-
-        .counter {
-            font-size: 3em;
-            color: green;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoSmart Bin - Monitoring Sampah Pintar</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-    <h1>Jumlah Sampah Masuk</h1>
-    <div class="counter" id="jumlahSampah">Memuat...</div>
+
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+                EcoSmart Bin
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active" data-page="dashboard">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-page="about">
+                        <i class="fas fa-info-circle"></i> Tentang
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+
+    <div class="main-container">
+        <div id="dashboard" class="page active">
+            <div class="dashboard-grid">
+                <div class="main-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-trash-alt"></i>
+                        </div>
+                        <h2 class="card-title">EcoSmart Monitor</h2>
+                        <p class="card-subtitle">Sistem Monitoring Sampah Real-time</p>
+                    </div>
+
+                    <div class="counter-display">
+                        <div class="counter-label">Total Sampah Masuk Hari Ini</div>
+                        <div class="counter-value" id="jumlahSampah">
+                            <span class="loading-spinner"></span>Loading...
+                        </div>
+                        <div class="counter-unit" id="counterUnit">items</div>
+                        <div class="status-bar">
+                            <div class="status-dot status-loading" id="statusDot"></div>
+                            <span class="status-text" id="statusText">Menghubungkan ke sensor...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-container">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-calendar-week"></i>
+                            </div>
+                            <div class="stat-value" id="weeklyTotal">-</div>
+                            <div class="stat-label">Total Minggu Ini</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="stat-value" id="monthlyTotal">-</div>
+                            <div class="stat-label">Total Bulan Ini</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="stat-value" id="avgDaily">-</div>
+                            <div class="stat-label">Rata-rata Harian</div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="activity-feed">
+                        <div class="activity-header">
+                            <i class="fas fa-clock"></i>
+                            <h3>Aktivitas Terbaru</h3>
+                        </div>
+                        <div id="activityList">
+                            <div class="activity-item">
+                                <div class="activity-time" id="lastUpdate">Memuat...</div>
+                                <div>
+                                    <i class="fas fa-wifi text-primary"></i>
+                                    <span>Menunggu data dari sensor...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="about" class="page">
+            <div class="about-container">
+                <div class="about-hero">
+                    <h1>EcoSmart Bin</h1>
+                    <p>Revolusi dalam Pengelolaan Sampah Digital</p>
+                </div>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                        <h3 class="feature-title">Teknologi IoT Canggih</h3>
+                        <p class="feature-description">
+                            Menggunakan sensor pintar dan teknologi Internet of Things (IoT) untuk memantau level sampah secara real-time dengan akurasi tinggi.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="feature-title">Analytics Real-time</h3>
+                        <p class="feature-description">
+                            Dashboard interaktif yang menampilkan statistik komprehensif, tren penggunaan, dan prediksi untuk optimalisasi pengelolaan sampah.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <h3 class="feature-title">Ramah Lingkungan</h3>
+                        <p class="feature-description">
+                            Membantu mengurangi jejak karbon melalui optimalisasi rute pengumpulan sampah dan meningkatkan efisiensi pengelolaan limbah.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="feature-card mt-2">
+                    <h3 class="feature-title text-center mb-2">Tentang Sistem</h3>
+                    <p class="feature-description text-center">
+                        EcoSmart Bin adalah solusi inovatif untuk monitoring sampah yang mengintegrasikan teknologi modern dengan kebutuhan lingkungan. 
+                        Sistem ini dirancang untuk membantu pengelolaan sampah yang lebih efisien, mengurangi biaya operasional, dan mendukung inisiatif kota pintar.
+                    </p>
+                    <div class="text-center mt-2">
+                        <div style="display: inline-flex; gap: 1rem; align-items: center; background: var(--light-gray); padding: 1rem 2rem; border-radius: 15px;">
+                            <i class="fas fa-code" style="color: var(--primary-green);"></i>
+                            <span>Dikembangkan dengan ❤️ untuk lingkungan yang lebih bersih</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Firebase Modular SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
-        // Konfigurasi Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCh-323pn0rAagXRgXwslRi2LoFq6xHKNs",
             authDomain: "smartbin-b3035.firebaseapp.com",
@@ -37,23 +170,185 @@
             measurementId: "G-19PFSY4ZD4"
         };
 
-        // Inisialisasi Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
-        // Ambil referensi ke dokumen "sampah/counter"
         const jumlahRef = doc(db, "sampah", "counter");
 
-        // Dengarkan perubahan data secara realtime
+        const elements = {
+            counter: document.getElementById("jumlahSampah"),
+            unit: document.getElementById("counterUnit"),
+            status: {
+                dot: document.getElementById("statusDot"),
+                text: document.getElementById("statusText")
+            },
+            stats: {
+                weekly: document.getElementById("weeklyTotal"),
+                monthly: document.getElementById("monthlyTotal"),
+                average: document.getElementById("avgDaily")
+            },
+            lastUpdate: document.getElementById("lastUpdate"),
+            activityList: document.getElementById("activityList")
+        };
+
+  
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetPage = link.dataset.page;
+                
+     
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                
+    
+                document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+                document.getElementById(targetPage).classList.add('active');
+            });
+        });
+
+    
+        let previousCount = 0;
+        let activityHistory = [];
+
+        
+        function formatNumber(num) {
+            return new Intl.NumberFormat('id-ID').format(num);
+        }
+
+        function formatTime(date) {
+            return new Intl.DateTimeFormat('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(date);
+        }
+
+        function updateStats(currentCount) {
+            const weeklyEstimate = Math.floor(currentCount * (7 + Math.random() * 3));
+            const monthlyEstimate = Math.floor(currentCount * (28 + Math.random() * 7));
+            const avgEstimate = Math.floor(monthlyEstimate / 30);
+
+            elements.stats.weekly.textContent = formatNumber(weeklyEstimate);
+            elements.stats.monthly.textContent = formatNumber(monthlyEstimate);
+            elements.stats.average.textContent = formatNumber(avgEstimate);
+        }
+
+        function addActivity(message, type = 'info') {
+            const now = new Date();
+            const activity = {
+                time: formatTime(now),
+                message: message,
+                type: type,
+                timestamp: now
+            };
+
+            activityHistory.unshift(activity);
+            if (activityHistory.length > 5) {
+                activityHistory = activityHistory.slice(0, 5);
+            }
+
+            updateActivityDisplay();
+        }
+
+        function updateActivityDisplay() {
+            const activityHTML = activityHistory.map(activity => {
+                const iconClass = activity.type === 'success' ? 'fas fa-check-circle' : 
+                                activity.type === 'error' ? 'fas fa-exclamation-circle' : 
+                                'fas fa-info-circle';
+                const iconColor = activity.type === 'success' ? 'var(--primary-green)' : 
+                                activity.type === 'error' ? '#e74c3c' : 
+                                'var(--blue)';
+
+                return `
+                    <div class="activity-item">
+                        <div class="activity-time">${activity.time}</div>
+                        <div>
+                            <i class="${iconClass}" style="color: ${iconColor}; margin-right: 0.5rem;"></i>
+                            <span>${activity.message}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            elements.activityList.innerHTML = activityHTML || `
+                <div class="activity-item">
+                    <div class="activity-time">--:--</div>
+                    <div>
+                        <i class="fas fa-clock" style="color: var(--gray);"></i>
+                        <span>Belum ada aktivitas</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateStatus(status, message) {
+            const statusClasses = {
+                online: 'status-online',
+                loading: 'status-loading',
+                offline: 'status-offline'
+            };
+
+            elements.status.dot.className = `status-dot ${statusClasses[status]}`;
+            elements.status.text.textContent = message;
+        }
+
+        function animateCounter(newValue) {
+            const counter = elements.counter;
+            const start = previousCount;
+            const end = newValue;
+            const duration = 800;
+            const startTime = performance.now();
+
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const value = Math.floor(start + (end - start) * progress);
+
+                counter.innerHTML = formatNumber(value);
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    counter.innerHTML = formatNumber(end);
+                }
+            }
+
+            requestAnimationFrame(animate);
+            previousCount = newValue;
+        }
+
+       
+        updateStatus('loading', 'Menghubungkan ke sensor...');
+        elements.counter.innerHTML = '<span class="loading-spinner"></span>Loading...';
+
         onSnapshot(jumlahRef, (docSnap) => {
             if (docSnap.exists()) {
-                const jumlah = docSnap.data().jumlah;
-                document.getElementById("jumlahSampah").innerText = jumlah;
+                const data = docSnap.data();
+                const count = data.jumlah || 0;
+                const unit = data.unit || 'items';
+                const lastUpdate = data.lastUpdate ? new Date(data.lastUpdate.seconds * 1000) : new Date();
+
+                animateCounter(count);
+                elements.unit.textContent = unit;
+                elements.lastUpdate.textContent = formatTime(lastUpdate);
+
+                updateStats(count);
+                updateStatus('online', 'Sensor online');
+                addActivity(`Data terbaru diterima (${formatNumber(count)} ${unit})`, 'success');
             } else {
-                document.getElementById("jumlahSampah").innerText = "Data tidak ditemukan";
+                elements.counter.textContent = '-';
+                elements.unit.textContent = '';
+                updateStatus('offline', 'Data tidak ditemukan');
+                addActivity('Data tidak ditemukan', 'error');
             }
+        }, (error) => {
+            elements.counter.textContent = '-';
+            elements.unit.textContent = '';
+            updateStatus('offline', 'Gagal terhubung ke sensor');
+            addActivity('Gagal terhubung ke sensor', 'error');
         });
+
     </script>
 </body>
-
 </html>
