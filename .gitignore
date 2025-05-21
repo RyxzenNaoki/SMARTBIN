@@ -32,3 +32,4 @@ firebase_key.json
 Thumbs.db
 
 node_modules/
+api-server/firebase-key.json
