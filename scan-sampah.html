@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Sampah - EcoSmart Bin</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Tambahan style khusus untuk halaman scan sampah */
+        .camera-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .camera-header {
+            background: var(--primary-green);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+
+        .camera-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera-header h2 i {
+            margin-right: 10px;
+        }
+
+        .camera-header p {
+            margin: 5px 0 0;
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .camera-view {
+            position: relative;
+            background: #000;
+            aspect-ratio: 4/3;
+            overflow: hidden;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #canvas {
+            display: none;
+        }
+
+        .captured-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-controls {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background: white;
+        }
+
+        .camera-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .camera-btn i {
+            margin-right: 8px;
+        }
+
+        .camera-btn.primary {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        .camera-btn.secondary {
+            background: var(--light-gray);
+            color: var(--gray);
+        }
+
+        .camera-btn.full-width {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .camera-info {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .camera-error {
+            padding: 30px;
+            text-align: center;
+            color: #e74c3c;
+        }
+
+        .classification-result {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .result-box h3 {
+            margin: 0 0 5px;
+            font-size: 1.1rem;
+        }
+
+        .result-box p {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-green);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            color: var(--gray);
+            text-decoration: none;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: var(--primary-green);
+        }
+
+        .back-link i {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+                EcoSmart Bin
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html#about" class="nav-link">
+                        <i class="fas fa-info-circle"></i> Tentang
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="scan-sampah.html" class="nav-link active scan-btn">
+                        <i class="fas fa-camera"></i> Scan Sampah
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="page active">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <a href="index.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+                </a>
+
+                <div class="camera-container">
+                    <div class="camera-header">
+                        <h2><i class="fas fa-camera"></i> Scan Sampah</h2>
+                        <p>Ambil foto sampah untuk klasifikasi jenis</p>
+                    </div>
+
+                    <div class="camera-view" id="cameraView">
+                        <!-- Kamera akan ditampilkan di sini -->
+                        <video id="video" autoplay playsinline></video>
+                        <canvas id="canvas"></canvas>
+                        <img id="capturedImage" class="captured-image" style="display: none;">
+                        
+                        <div id="classificationResult" class="classification-result" style="display: none;">
+                            <div class="result-box">
+                                <h3>Hasil Klasifikasi</h3>
+                                <p id="resultText">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="camera-controls" id="cameraControls">
+                        <button id="captureBtn" class="camera-btn primary full-width">
+                            <i class="fas fa-camera"></i> Ambil Foto
+                        </button>
+                    </div>
+                </div>
+
+                <div class="camera-info">
+                    <p>Arahkan kamera ke sampah untuk mengklasifikasikan jenisnya.</p>
+                    <p>Pastikan pencahayaan cukup untuk hasil yang optimal.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const capturedImage = document.getElementById('capturedImage');
+            const captureBtn = document.getElementById('captureBtn');
+            const cameraView = document.getElementById('cameraView');
+            const cameraControls = document.getElementById('cameraControls');
+            const classificationResult = document.getElementById('classificationResult');
+            const resultText = document.getElementById('resultText');
+
+            let stream = null;
+            let isCapturing = true;
+
+            // Mulai kamera
+            async function startCamera() {
+                try {
+                    // Reset UI
+                    capturedImage.style.display = 'none';
+                    video.style.display = 'block';
+                    classificationResult.style.display = 'none';
+                    isCapturing = true;
+                    
+                    // Minta akses kamera (preferensi kamera belakang)
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'environment' }
+                    });
+                    
+                    // Tampilkan video
+                    video.srcObject = stream;
+                    
+                    // Update tombol
+                    captureBtn.innerHTML = '<i class="fas fa-camera"></i> Ambil Foto';
+                    captureBtn.onclick = capturePhoto;
+                    captureBtn.className = 'camera-btn primary full-width';
+                    
+                    // Tampilkan pesan error jika ada
+                    if (cameraView.querySelector('.camera-error')) {
+                        cameraView.querySelector('.camera-error').remove();
+                    }
+                } catch (err) {
+                    console.error('Error accessing camera:', err);
+                    
+                    // Tampilkan pesan error
+                    video.style.display = 'none';
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'camera-error';
+                    errorDiv.innerHTML = `
+                        <p>Tidak dapat mengakses kamera. Pastikan Anda memberikan izin kamera.</p>
+                        <button class="camera-btn primary" onclick="startCamera()">
+                            <i class="fas fa-redo"></i> Coba Lagi
+                        </button>
+                    `;
+                    cameraView.appendChild(errorDiv);
+                }
+            }
+
+            // Ambil foto
+            function capturePhoto() {
+                if (!isCapturing) return;
+                
+                // Ambil ukuran video
+                const videoWidth = video.videoWidth;
+                const videoHeight = video.videoHeight;
+                
+                // Set ukuran canvas sesuai video
+                canvas.width = videoWidth;
+                canvas.height = videoHeight;
+                
+                // Gambar frame video ke canvas
+                const context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, videoWidth, videoHeight);
+                
+                // Konversi canvas ke data URL
+                const imageDataUrl = canvas.toDataURL('image/jpeg');
+                
+                // Tampilkan gambar yang diambil
+                capturedImage.src = imageDataUrl;
+                capturedImage.style.display = 'block';
+                video.style.display = 'none';
+                
+                // Hentikan kamera
+                stopCamera();
+                
+                // Update tombol
+                cameraControls.innerHTML = `
+                    <button id="retakeBtn" class="camera-btn secondary">
+                        <i class="fas fa-redo"></i> Ambil Ulang
+                    </button>
+                    <button id="classifyBtn" class="camera-btn primary">
+                        <i class="fas fa-image"></i> Klasifikasi
+                    </button>
+                `;
+                
+                // Tambahkan event listener untuk tombol
+                document.getElementById('retakeBtn').addEventListener('click', startCamera);
+                document.getElementById('classifyBtn').addEventListener('click', classifyImage);
+                
+                isCapturing = false;
+            }
+
+            // Hentikan kamera
+            function stopCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                    stream = null;
+                }
+            }
+
+            // Klasifikasi gambar (simulasi)
+            function classifyImage() {
+                // Update tombol saat proses klasifikasi
+                document.getElementById('classifyBtn').innerHTML = `
+                    <span class="loading-spinner"></span> Mengklasifikasi...
+                `;
+                document.getElementById('classifyBtn').disabled = true;
+                
+                // Simulasi delay API
+                setTimeout(() => {
+                    // Hasil klasifikasi (simulasi)
+                    const wasteTypes = ['Organik', 'Plastik', 'Kertas', 'Logam', 'Kaca'];
+                    const randomResult = wasteTypes[Math.floor(Math.random() * wasteTypes.length)];
+                    
+                    // Tampilkan hasil
+                    resultText.textContent = randomResult;
+                    classificationResult.style.display = 'flex';
+                    
+                    // Update tombol
+                    cameraControls.innerHTML = `
+                        <button id="newScanBtn" class="camera-btn primary full-width">
+                            <i class="fas fa-plus"></i> Scan Baru
+                        </button>
+                    `;
+                    
+                    // Tambahkan event listener untuk tombol scan baru
+                    document.getElementById('newScanBtn').addEventListener('click', startCamera);
+                }, 2000);
+            }
+
+            // Mulai kamera saat halaman dimuat
+            startCamera();
+
+            // Bersihkan saat halaman ditutup
+            window.addEventListener('beforeunload', stopCamera);
+        });
+    </script>
+</body>
+</html>

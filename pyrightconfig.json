@@ -1,0 +1,7 @@
+{
+  "include": ["api-server"],
+  "venvPath": "./api-server",
+  "venv": "venv",
+  "pythonVersion": "3.10",
+  "reportMissingImports": false
+}

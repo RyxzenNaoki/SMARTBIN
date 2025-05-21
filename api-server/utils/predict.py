@@ -1,18 +1,33 @@
+import os
 import numpy as np
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
-import os
 
-# muat model sekali saat import
-model_path = os.path.join(os.path.dirname(__file__), "..", "model", "trashnet_model.h5")
+# Load model
+model_path = os.path.join(os.path.dirname(__file__), '..', 'model', 'trashnet_model.h5')
 model = load_model(model_path)
-# pastikan urutan label sesuai saat training
-class_names = ['anorganik', 'organik']
 
-def classify_image(img_path: str) -> str:
-    img = image.load_img(img_path, target_size=(128, 128))
-    arr = image.img_to_array(img) / 255.0
-    arr = np.expand_dims(arr, 0)
-    preds = model.predict(arr)
-    idx = int(np.argmax(preds[0]))
-    return class_names[idx]
+# Kelas asli TrashNet
+class_names = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
+
+# Fungsi prediksi
+def predict_image(img_path):
+    # Load & preprocess gambar
+    img = image.load_img(img_path, target_size=(224, 224))
+    img_array = image.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0)
+    img_array = img_array / 255.0
+
+    # Prediksi
+    prediction = model.predict(img_array)
+    predicted_index = np.argmax(prediction)
+    predicted_class = class_names[predicted_index]
+
+    # Mapping ke 2 kelas utama
+    if predicted_class in ['paper', 'cardboard']:
+        final_class = 'Organik'
+    else:
+        final_class = 'Anorganik'
+
+    print(f"Hasil prediksi: {final_class} ({predicted_class})")
+    return final_class, predicted_class
