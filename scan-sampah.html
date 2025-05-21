@@ -177,6 +177,38 @@
         .back-link i {
             margin-right: 5px;
         }
+
+        .connection-status {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #ccc;
+        }
+        
+        .status-online {
+            background-color: var(--primary-green);
+        }
+        
+        .status-offline {
+            background-color: var(--red);
+        }
     </style>
 </head>
 <body>
@@ -244,153 +276,252 @@
                     <p>Arahkan kamera ke sampah untuk mengklasifikasikan jenisnya.</p>
                     <p>Pastikan pencahayaan cukup untuk hasil yang optimal.</p>
                 </div>
+
+                <div class="connection-status">
+                    <div class="status-item">
+                        <span class="status-dot" id="apiStatus"></span>
+                        <span>API Server</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-dot" id="firebaseStatus"></span>
+                        <span>Firebase</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            const capturedImage = document.getElementById('capturedImage');
-            const captureBtn = document.getElementById('captureBtn');
-            const cameraView = document.getElementById('cameraView');
-            const cameraControls = document.getElementById('cameraControls');
-            const classificationResult = document.getElementById('classificationResult');
-            const resultText = document.getElementById('resultText');
+        // Variabel global
+        let stream = null;
+        let isCapturing = true;
+        const API_URL = 'http://localhost:8000'; // Ganti dengan URL API Anda
 
-            let stream = null;
-            let isCapturing = true;
+        // Elemen DOM
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const capturedImage = document.getElementById('capturedImage');
+        const captureBtn = document.getElementById('captureBtn');
+        const cameraView = document.getElementById('cameraView');
+        const cameraControls = document.getElementById('cameraControls');
+        const classificationResult = document.getElementById('classificationResult');
+        const resultText = document.getElementById('resultText');
+        const apiStatus = document.getElementById('apiStatus');
+        const firebaseStatus = document.getElementById('firebaseStatus');
 
-            // Mulai kamera
-            async function startCamera() {
-                try {
-                    // Reset UI
-                    capturedImage.style.display = 'none';
-                    video.style.display = 'block';
-                    classificationResult.style.display = 'none';
-                    isCapturing = true;
-                    
-                    // Minta akses kamera (preferensi kamera belakang)
-                    stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: 'environment' }
-                    });
-                    
-                    // Tampilkan video
-                    video.srcObject = stream;
-                    
-                    // Update tombol
-                    captureBtn.innerHTML = '<i class="fas fa-camera"></i> Ambil Foto';
-                    captureBtn.onclick = capturePhoto;
-                    captureBtn.className = 'camera-btn primary full-width';
-                    
-                    // Tampilkan pesan error jika ada
-                    if (cameraView.querySelector('.camera-error')) {
-                        cameraView.querySelector('.camera-error').remove();
-                    }
-                } catch (err) {
-                    console.error('Error accessing camera:', err);
-                    
-                    // Tampilkan pesan error
-                    video.style.display = 'none';
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'camera-error';
-                    errorDiv.innerHTML = `
-                        <p>Tidak dapat mengakses kamera. Pastikan Anda memberikan izin kamera.</p>
-                        <button class="camera-btn primary" onclick="startCamera()">
-                            <i class="fas fa-redo"></i> Coba Lagi
-                        </button>
-                    `;
-                    cameraView.appendChild(errorDiv);
-                }
-            }
-
-            // Ambil foto
-            function capturePhoto() {
-                if (!isCapturing) return;
+        // Mulai kamera
+        async function startCamera() {
+            try {
+                // Reset UI
+                capturedImage.style.display = 'none';
+                video.style.display = 'block';
+                classificationResult.style.display = 'none';
+                isCapturing = true;
                 
-                // Ambil ukuran video
-                const videoWidth = video.videoWidth;
-                const videoHeight = video.videoHeight;
+                // Minta akses kamera (preferensi kamera belakang)
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                });
                 
-                // Set ukuran canvas sesuai video
-                canvas.width = videoWidth;
-                canvas.height = videoHeight;
-                
-                // Gambar frame video ke canvas
-                const context = canvas.getContext('2d');
-                context.drawImage(video, 0, 0, videoWidth, videoHeight);
-                
-                // Konversi canvas ke data URL
-                const imageDataUrl = canvas.toDataURL('image/jpeg');
-                
-                // Tampilkan gambar yang diambil
-                capturedImage.src = imageDataUrl;
-                capturedImage.style.display = 'block';
-                video.style.display = 'none';
-                
-                // Hentikan kamera
-                stopCamera();
+                // Tampilkan video
+                video.srcObject = stream;
                 
                 // Update tombol
                 cameraControls.innerHTML = `
-                    <button id="retakeBtn" class="camera-btn secondary">
-                        <i class="fas fa-redo"></i> Ambil Ulang
-                    </button>
-                    <button id="classifyBtn" class="camera-btn primary">
-                        <i class="fas fa-image"></i> Klasifikasi
+                    <button id="captureBtn" class="camera-btn primary full-width">
+                        <i class="fas fa-camera"></i> Ambil Foto
                     </button>
                 `;
                 
-                // Tambahkan event listener untuk tombol
-                document.getElementById('retakeBtn').addEventListener('click', startCamera);
-                document.getElementById('classifyBtn').addEventListener('click', classifyImage);
+                // Tambahkan event listener untuk tombol capture
+                document.getElementById('captureBtn').addEventListener('click', capturePhoto);
                 
-                isCapturing = false;
-            }
-
-            // Hentikan kamera
-            function stopCamera() {
-                if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
-                    video.srcObject = null;
-                    stream = null;
+                // Hapus pesan error jika ada
+                const errorElement = cameraView.querySelector('.camera-error');
+                if (errorElement) {
+                    errorElement.remove();
                 }
-            }
-
-            // Klasifikasi gambar (simulasi)
-            function classifyImage() {
-                // Update tombol saat proses klasifikasi
-                document.getElementById('classifyBtn').innerHTML = `
-                    <span class="loading-spinner"></span> Mengklasifikasi...
-                `;
-                document.getElementById('classifyBtn').disabled = true;
+            } catch (err) {
+                console.error('Error accessing camera:', err);
                 
-                // Simulasi delay API
-                setTimeout(() => {
-                    // Hasil klasifikasi (simulasi)
-                    const wasteTypes = ['Organik', 'Plastik', 'Kertas', 'Logam', 'Kaca'];
-                    const randomResult = wasteTypes[Math.floor(Math.random() * wasteTypes.length)];
-                    
-                    // Tampilkan hasil
-                    resultText.textContent = randomResult;
-                    classificationResult.style.display = 'flex';
-                    
-                    // Update tombol
-                    cameraControls.innerHTML = `
-                        <button id="newScanBtn" class="camera-btn primary full-width">
-                            <i class="fas fa-plus"></i> Scan Baru
-                        </button>
-                    `;
-                    
-                    // Tambahkan event listener untuk tombol scan baru
-                    document.getElementById('newScanBtn').addEventListener('click', startCamera);
-                }, 2000);
+                // Tampilkan pesan error
+                video.style.display = 'none';
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'camera-error';
+                errorDiv.innerHTML = `
+                    <p>Tidak dapat mengakses kamera. Pastikan Anda memberikan izin kamera.</p>
+                    <button class="camera-btn primary" id="retryBtn">
+                        <i class="fas fa-redo"></i> Coba Lagi
+                    </button>
+                `;
+                cameraView.appendChild(errorDiv);
+                
+                // Tambahkan event listener untuk tombol retry
+                document.getElementById('retryBtn').addEventListener('click', startCamera);
             }
+        }
 
-            // Mulai kamera saat halaman dimuat
+        // Ambil foto
+        function capturePhoto() {
+            if (!isCapturing) return;
+            
+            // Ambil ukuran video
+            const videoWidth = video.videoWidth;
+            const videoHeight = video.videoHeight;
+            
+            // Set ukuran canvas sesuai video
+            canvas.width = videoWidth;
+            canvas.height = videoHeight;
+            
+            // Gambar frame video ke canvas
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, videoWidth, videoHeight);
+            
+            // Konversi canvas ke data URL
+            const imageDataUrl = canvas.toDataURL('image/jpeg');
+            
+            // Tampilkan gambar yang diambil
+            capturedImage.src = imageDataUrl;
+            capturedImage.style.display = 'block';
+            video.style.display = 'none';
+            
+            // Hentikan kamera
+            stopCamera();
+            
+            // Update tombol
+            cameraControls.innerHTML = `
+                <button id="retakeBtn" class="camera-btn secondary">
+                    <i class="fas fa-redo"></i> Ambil Ulang
+                </button>
+                <button id="classifyBtn" class="camera-btn primary">
+                    <i class="fas fa-image"></i> Klasifikasi
+                </button>
+            `;
+            
+            // Tambahkan event listener untuk tombol
+            document.getElementById('retakeBtn').addEventListener('click', startCamera);
+            document.getElementById('classifyBtn').addEventListener('click', classifyImage);
+            
+            isCapturing = false;
+        }
+
+        // Hentikan kamera
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                stream = null;
+            }
+        }
+
+        // Klasifikasi gambar dengan mengirim ke API
+        async function classifyImage() {
+            // Update tombol saat proses klasifikasi
+            document.getElementById('classifyBtn').innerHTML = `
+                <span class="loading-spinner"></span> Mengklasifikasi...
+            `;
+            document.getElementById('classifyBtn').disabled = true;
+            
+            try {
+                // Ambil data gambar dari canvas
+                const imageDataUrl = canvas.toDataURL('image/jpeg');
+                const blob = await (await fetch(imageDataUrl)).blob();
+                
+                // Buat FormData untuk mengirim file
+                const formData = new FormData();
+                formData.append('file', blob, 'image.jpg');
+                
+                // Kirim ke API
+                const response = await fetch(`${API_URL}/classify`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Gagal menghubungi server');
+                }
+                
+                // Ambil hasil klasifikasi
+                const result = await response.json();
+                
+                // Tampilkan hasil
+                resultText.textContent = result.jenis;
+                classificationResult.style.display = 'flex';
+                
+                // Update tombol
+                cameraControls.innerHTML = `
+                    <button id="newScanBtn" class="camera-btn primary full-width">
+                        <i class="fas fa-plus"></i> Scan Baru
+                    </button>
+                `;
+                
+                // Tambahkan event listener untuk tombol scan baru
+                document.getElementById('newScanBtn').addEventListener('click', startCamera);
+                
+                // Update status
+                apiStatus.className = 'status-dot status-online';
+                firebaseStatus.className = 'status-dot status-online';
+            } catch (error) {
+                console.error('Error classifying image:', error);
+                alert('Gagal mengklasifikasi gambar. Silakan coba lagi.');
+                
+                // Reset tombol
+                document.getElementById('classifyBtn').innerHTML = `
+                    <i class="fas fa-image"></i> Klasifikasi
+                `;
+                document.getElementById('classifyBtn').disabled = false;
+                
+                // Update status
+                apiStatus.className = 'status-dot status-offline';
+            }
+        }
+
+        // Cek koneksi ke API
+        async function checkAPIConnection() {
+            try {
+                const response = await fetch(`${API_URL}/status`, { method: 'GET' });
+                if (response.ok) {
+                    apiStatus.className = 'status-dot status-online';
+                    return true;
+                } else {
+                    apiStatus.className = 'status-dot status-offline';
+                    return false;
+                }
+            } catch (error) {
+                apiStatus.className = 'status-dot status-offline';
+                return false;
+            }
+        }
+        
+        // Cek koneksi ke Firebase (simulasi)
+        function checkFirebaseConnection() {
+            // Ini hanya simulasi, karena kita tidak bisa mengakses Firebase langsung dari browser tanpa SDK
+            // Dalam implementasi nyata, Anda bisa menggunakan Firebase SDK untuk cek koneksi
+            fetch('https://smartbin-b3035-default-rtdb.firebaseio.com/.json')
+                .then(response => {
+                    if (response.ok) {
+                        firebaseStatus.className = 'status-dot status-online';
+                    } else {
+                        firebaseStatus.className = 'status-dot status-offline';
+                    }
+                })
+                .catch(() => {
+                    firebaseStatus.className = 'status-dot status-offline';
+                });
+        }
+        
+        // Cek koneksi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
             startCamera();
-
+            checkAPIConnection();
+            checkFirebaseConnection();
+            
+            // Cek koneksi setiap 30 detik
+            setInterval(() => {
+                checkAPIConnection();
+                checkFirebaseConnection();
+            }, 30000);
+            
             // Bersihkan saat halaman ditutup
             window.addEventListener('beforeunload', stopCamera);
         });
