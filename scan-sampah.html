@@ -325,7 +325,7 @@
         // Dinamis: Gunakan origin jika production, localhost jika dev
         const API_URL = window.location.hostname.includes("localhost")
             ? "http://localhost:8000"
-            : "https://smartbin-server-production.up.railway.app/";
+            : "https://smartbin-server-production.up.railway.app";
 
         let stream = null;
         let isCapturing = true;
