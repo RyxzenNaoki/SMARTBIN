@@ -1,52 +1,51 @@
 import os
 import shutil
-from fastapi import FastAPI, File, UploadFile, HTTPException
-from utils.predict import predict_image
 import time
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from utils.predict import predict_image
 
-# Definisikan variabel global untuk Firebase
+# Firebase global vars
 firebase_admin = None
 db = None
 firebase_initialized = False
 
 app = FastAPI(title="SmartBin Classification API")
 
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://smartbin-iot.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Coba inisialisasi Firebase
+# Inisialisasi Firebase Firestore
 try:
     import firebase_admin
-    from firebase_admin import credentials, db as firebase_db
-    
-    # Cek beberapa lokasi yang mungkin untuk file kredensial
+    from firebase_admin import credentials, firestore
+
     possible_paths = [
         "./firebase-key.json",
         "./firebase_key.json",
         "../utils/firebase-key.json",
         "../utils/firebase_key.json",
     ]
-    
+
     for path in possible_paths:
         if os.path.exists(path):
             print(f"Menggunakan kredensial Firebase dari: {path}")
             cred = credentials.Certificate(path)
-            firebase_admin.initialize_app(cred, {
-                "databaseURL": "https://smartbin-b3035-default-rtdb.firebaseio.com/"
-            })
-            db = firebase_db  # Assign ke variabel global
+            firebase_admin.initialize_app(cred)
+            db = firestore.client()
             firebase_initialized = True
             break
-    
+
     if not firebase_initialized:
         print("WARNING: File kredensial Firebase tidak ditemukan.")
         print("Fitur Firebase dinonaktifkan.")
+
 except ImportError:
     print("Firebase Admin SDK tidak terinstal. Fitur Firebase dinonaktifkan.")
 except Exception as e:
@@ -54,67 +53,61 @@ except Exception as e:
 
 @app.post("/classify")
 async def classify_endpoint(file: UploadFile = File(...)):
-    # Pastikan filename tidak None dan aman untuk digunakan sebagai nama file
     if file.filename is None:
         tmp_path = "uploaded_image.jpg"
     else:
         tmp_path = file.filename.replace(" ", "_")
-    
-    # Pastikan tmp_path tidak kosong
+
     if not tmp_path:
         tmp_path = "uploaded_image.jpg"
-    
+
     print(f"Menyimpan file sementara ke: {tmp_path}")
-    
-    # Simpan file yang diupload
+
     try:
         with open(tmp_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error menyimpan file: {e}")
 
-    # Klasifikasi gambar
     try:
         result, original_class = predict_image(tmp_path)
         print(f"Hasil klasifikasi: {result} (asli: {original_class})")
-        
-        # Simpan ke Firebase jika tersedia
+
         if firebase_initialized and db is not None:
             try:
-                # Simpan hasil klasifikasi
-                klasifikasi_ref = db.reference("/klasifikasi_terakhir")
-                klasifikasi_ref.set({
+                timestamp = int(time.time() * 1000)
+
+                # Simpan hasil klasifikasi terakhir
+                db.collection("klasifikasi").document("terakhir").set({
                     "jenis": result,
                     "kelas_asli": original_class,
-                    "timestamp": int(time.time() * 1000)
+                    "timestamp": timestamp
                 })
-                
+
                 # Tambahkan ke riwayat klasifikasi
-                history_ref = db.reference("/riwayat_klasifikasi").push()
-                history_ref.set({
+                db.collection("riwayat_klasifikasi").add({
                     "jenis": result,
                     "kelas_asli": original_class,
-                    "timestamp": int(time.time() * 1000)
+                    "timestamp": timestamp
                 })
-                
-                # Update status untuk ESP32
-                status_ref = db.reference("/status_sampah")
-                status_ref.set({
+
+                # Status untuk ESP32
+                db.collection("status_sampah").document("esp32").set({
                     "jenis": result,
-                    "perlu_dibuka": True,  # Flag untuk ESP32 bahwa ada sampah baru
-                    "timestamp": int(time.time() * 1000)
+                    "perlu_dibuka": True,
+                    "timestamp": timestamp
                 })
-                
-                print("Hasil berhasil disimpan ke Firebase")
+
+                print("Hasil berhasil disimpan ke Firestore")
+
             except Exception as e:
-                print(f"Error saat menyimpan ke Firebase: {e}")
+                print(f"Error saat menyimpan ke Firestore: {e}")
         else:
-            print("Hasil tidak disimpan ke Firebase (dinonaktifkan)")
+            print("Hasil tidak disimpan ke Firestore (dinonaktifkan)")
     except Exception as e:
         print(f"Error saat klasifikasi: {e}")
         raise HTTPException(status_code=500, detail=f"Model error: {e}")
     finally:
-        # Hapus file sementara jika ada
         if tmp_path and os.path.exists(tmp_path):
             try:
                 os.remove(tmp_path)
@@ -128,9 +121,40 @@ async def classify_endpoint(file: UploadFile = File(...)):
 async def status():
     firebase_status = "aktif" if firebase_initialized else "nonaktif"
     return {
-        "status": "online", 
-        "message": f"API server berjalan (Firebase: {firebase_status})"
+        "status": "online",
+        "message": f"API server berjalan (Firestore: {firebase_status})"
     }
+    
+@app.get("/status_sampah/esp32")
+async def get_status():
+    if not firebase_initialized or db is None:
+        raise HTTPException(status_code=500, detail="Firestore tidak tersedia")
+
+    try:
+        doc_ref = db.collection("status_sampah").document("esp32")
+        doc = doc_ref.get()
+        if doc.exists:
+            return doc.to_dict()
+        else:
+            return {"error": "Dokumen tidak ditemukan"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/reset")
+async def reset_status():
+    if not firebase_initialized or db is None:
+        raise HTTPException(status_code=500, detail="Firestore tidak tersedia")
+
+    try:
+        db.collection("status_sampah").document("esp32").update({
+            "perlu_dibuka": False
+        })
+        return {"message": "Status berhasil direset"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 if __name__ == "__main__":
     import uvicorn
