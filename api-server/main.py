@@ -15,7 +15,7 @@ app = FastAPI(title="SmartBin Classification API")
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://smartbin-iot.vercel.app"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -48,6 +48,13 @@ try:
 
 except Exception as e:
     print("❌ Gagal inisialisasi Firebase:", e)
+    
+print("📦 ENV Vars Loaded:")
+print("Project ID:", os.getenv("FB_SA_PROJECT_ID"))
+print("PK ID:", os.getenv("FB_SA_PRIVATE_KEY_ID"))
+print("Client Email:", os.getenv("FB_SA_CLIENT_EMAIL"))
+print("PK length:", len(os.getenv("FB_SA_PRIVATE_KEY") or "None"))
+
 
 
 @app.post("/classify")
@@ -152,8 +159,15 @@ async def reset_status():
         return {"message": "Status berhasil direset"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
+    
+@app.get("/model-info")
+async def model_info():
+    from utils.predict import model
+    return {
+        "input_shape": str(model.input_shape),
+        "output_shape": str(model.output_shape),
+        "model_name": model.name if hasattr(model, 'name') else "unknown"
+    }
 
 if __name__ == "__main__":
     import uvicorn
