@@ -5,7 +5,504 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EcoSmart Bin - Monitoring Sampah Pintar</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary-green: #2ecc71;
+            --secondary-green: #27ae60;
+            --light-green: #a8e6cf;
+            --dark-green: #1e8449;
+            --blue: #3498db;
+            --dark-blue: #2980b9;
+            --orange: #f39c12;
+            --red: #e74c3c;
+            --gray: #7f8c8d;
+            --light-gray: #ecf0f1;
+            --dark-gray: #34495e;
+            --white: #ffffff;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --border-radius: 16px;
+            --gradient-primary: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+            --gradient-blue: linear-gradient(135deg, var(--blue) 0%, var(--dark-blue) 100%);
+            --gradient-orange: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--dark-gray);
+        }
+
+        .nav {
+            background: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-green);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--gray);
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary-green);
+            background: var(--light-green);
+        }
+
+        .scan-btn {
+            background: var(--gradient-primary);
+            color: var(--white) !important;
+            border-radius: 25px;
+            padding: 0.75rem 1.5rem;
+        }
+
+        .scan-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(46, 204, 113, 0.3);
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: 1fr;
+        }
+
+        /* Main Stats Cards */
+        .main-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .main-card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--light-green);
+            color: var(--primary-green);
+            font-size: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            color: var(--dark-gray);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-subtitle {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .counter-display {
+            text-align: center;
+        }
+
+        .counter-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .counter-value {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary-green);
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+
+        .counter-unit {
+            font-size: 1rem;
+            color: var(--gray);
+            margin-bottom: 1.5rem;
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: var(--light-gray);
+            border-radius: 8px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-online { background: var(--primary-green); }
+        .status-loading { background: var(--orange); }
+        .status-offline { background: var(--red); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--light-gray);
+            border-radius: 50%;
+            border-top-color: var(--primary-green);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Type Cards for Organic/Inorganic */
+        .type-card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .type-card.organic::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .type-card.inorganic::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-blue);
+        }
+
+        .type-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1.25rem;
+        }
+
+        .type-card.organic .type-icon {
+            background: var(--light-green);
+            color: var(--primary-green);
+        }
+
+        .type-card.inorganic .type-icon {
+            background: #dbeafe;
+            color: var(--blue);
+        }
+
+        .type-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+
+        .type-card.organic .type-value {
+            color: var(--primary-green);
+        }
+
+        .type-card.inorganic .type-value {
+            color: var(--blue);
+        }
+
+        .type-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Secondary Stats */
+        .stats-container {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--light-gray);
+            color: var(--gray);
+            font-size: 1rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--dark-gray);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .activity-feed {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .activity-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark-gray);
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-time {
+            font-size: 0.8rem;
+            color: var(--gray);
+            min-width: 80px;
+        }
+
+        /* About Page */
+        .about-container {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 3rem;
+            box-shadow: var(--shadow);
+        }
+
+        .about-hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .about-hero h1 {
+            font-size: 2.5rem;
+            color: var(--primary-green);
+            margin-bottom: 1rem;
+        }
+
+        .about-hero p {
+            font-size: 1.2rem;
+            color: var(--gray);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-card {
+            padding: 2rem;
+            text-align: center;
+            border-radius: var(--border-radius);
+            border: 2px solid var(--light-gray);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--primary-green);
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--light-green);
+            color: var(--primary-green);
+            font-size: 1.5rem;
+        }
+
+        .feature-title {
+            color: var(--dark-gray);
+            margin-bottom: 1rem;
+        }
+
+        .feature-description {
+            color: var(--gray);
+            line-height: 1.6;
+        }
+
+        .mt-2 { margin-top: 2rem; }
+        .mb-2 { margin-bottom: 2rem; }
+        .text-center { text-align: center; }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 1rem;
+            }
+
+            .nav-menu {
+                gap: 1rem;
+            }
+
+            .main-container {
+                padding: 1rem;
+            }
+
+            .main-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .counter-value {
+                font-size: 2.5rem;
+            }
+
+            .about-hero h1 {
+                font-size: 2rem;
+            }
+
+            .about-container {
+                padding: 2rem;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -35,32 +532,60 @@
         </div>
     </nav>
 
-
     <div class="main-container">
         <div id="dashboard" class="page active">
             <div class="dashboard-grid">
-                <div class="main-card">
-                    <div class="card-header">
-                        <div class="card-icon">
-                            <i class="fas fa-trash-alt"></i>
+                <!-- Main Stats Section -->
+                <div class="main-stats">
+                    <!-- Total Sampah Card -->
+                    <div class="main-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-trash-alt"></i>
+                            </div>
+                            <h2 class="card-title">Total Sampah</h2>
+                            <p class="card-subtitle">Jumlah Keseluruhan Hari Ini</p>
                         </div>
-                        <h2 class="card-title">EcoSmart Monitor</h2>
-                        <p class="card-subtitle">Sistem Monitoring Sampah Real-time</p>
+
+                        <div class="counter-display">
+                            <div class="counter-label">Total Sampah Masuk Hari Ini</div>
+                            <div class="counter-value" id="jumlahSampah">
+                                <span class="loading-spinner"></span>Loading...
+                            </div>
+                            <div class="counter-unit" id="counterUnit">items</div>
+                            <div class="status-bar">
+                                <div class="status-dot status-loading" id="statusDot"></div>
+                                <span class="status-text" id="statusText">Menghubungkan ke sensor...</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="counter-display">
-                        <div class="counter-label">Total Sampah Masuk Hari Ini</div>
-                        <div class="counter-value" id="jumlahSampah">
-                            <span class="loading-spinner"></span>Loading...
+                    <!-- Sampah Organik Card -->
+                    <div class="type-card organic">
+                        <div class="type-icon">
+                            <i class="fas fa-seedling"></i>
                         </div>
-                        <div class="counter-unit" id="counterUnit">items</div>
-                        <div class="status-bar">
-                            <div class="status-dot status-loading" id="statusDot"></div>
-                            <span class="status-text" id="statusText">Menghubungkan ke sensor...</span>
+                        <div class="type-value" id="organikCount">
+                            <span class="loading-spinner"></span>
                         </div>
+                        <div class="type-label">Sampah Organik</div>
+                        <div class="counter-unit" style="font-size: 0.8rem; margin-top: 0.5rem;" id="organikUnit">items</div>
+                    </div>
+
+                    <!-- Sampah Anorganik Card -->
+                    <div class="type-card inorganic">
+                        <div class="type-icon">
+                            <i class="fas fa-recycle"></i>
+                        </div>
+                        <div class="type-value" id="anorganikCount">
+                            <span class="loading-spinner"></span>
+                        </div>
+                        <div class="type-label">Sampah Anorganik</div>
+                        <div class="counter-unit" style="font-size: 0.8rem; margin-top: 0.5rem;" id="anorganikUnit">items</div>
                     </div>
                 </div>
 
+                <!-- Secondary Stats -->
                 <div class="stats-container">
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -84,9 +609,16 @@
                             <div class="stat-value" id="avgDaily">-</div>
                             <div class="stat-label">Rata-rata Harian</div>
                         </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div class="stat-value" id="organikPercentage">-</div>
+                            <div class="stat-label">Persentase Organik</div>
+                        </div>
                     </div>
 
-                    
+                    <!-- Activity Feed -->
                     <div class="activity-feed">
                         <div class="activity-header">
                             <i class="fas fa-clock"></i>
@@ -182,6 +714,10 @@
         const elements = {
             counter: document.getElementById("jumlahSampah"),
             unit: document.getElementById("counterUnit"),
+            organikCount: document.getElementById("organikCount"),
+            organikUnit: document.getElementById("organikUnit"),
+            anorganikCount: document.getElementById("anorganikCount"),
+            anorganikUnit: document.getElementById("anorganikUnit"),
             status: {
                 dot: document.getElementById("statusDot"),
                 text: document.getElementById("statusText")
@@ -189,36 +725,34 @@
             stats: {
                 weekly: document.getElementById("weeklyTotal"),
                 monthly: document.getElementById("monthlyTotal"),
-                average: document.getElementById("avgDaily")
+                average: document.getElementById("avgDaily"),
+                organikPercentage: document.getElementById("organikPercentage")
             },
             lastUpdate: document.getElementById("lastUpdate"),
             activityList: document.getElementById("activityList")
         };
 
-  
+        // Navigation
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', (e) => {
-                // Skip for scan-sampah button which should navigate to a new page
                 if (link.classList.contains('scan-btn')) return;
                 
                 e.preventDefault();
                 const targetPage = link.dataset.page;
                 
-     
                 document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
                 link.classList.add('active');
                 
-    
                 document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
                 document.getElementById(targetPage).classList.add('active');
             });
         });
 
-    
-        let previousCount = 0;
+        let previousTotal = 0;
+        let previousOrganik = 0;
+        let previousAnorganik = 0;
         let activityHistory = [];
 
-        
         function formatNumber(num) {
             return new Intl.NumberFormat('id-ID').format(num);
         }
@@ -232,14 +766,16 @@
             }).format(date);
         }
 
-        function updateStats(currentCount) {
-            const weeklyEstimate = Math.floor(currentCount * (7 + Math.random() * 3));
-            const monthlyEstimate = Math.floor(currentCount * (28 + Math.random() * 7));
+        function updateStats(totalCount, organikCount, anorganikCount) {
+            const weeklyEstimate = Math.floor(totalCount * (7 + Math.random() * 3));
+            const monthlyEstimate = Math.floor(totalCount * (28 + Math.random() * 7));
             const avgEstimate = Math.floor(monthlyEstimate / 30);
+            const organikPercent = totalCount > 0 ? Math.round((organikCount / totalCount) * 100) : 0;
 
             elements.stats.weekly.textContent = formatNumber(weeklyEstimate);
             elements.stats.monthly.textContent = formatNumber(monthlyEstimate);
             elements.stats.average.textContent = formatNumber(avgEstimate);
+            elements.stats.organikPercentage.textContent = organikPercent + '%';
         }
 
         function addActivity(message, type = 'info') {
@@ -301,9 +837,8 @@
             elements.status.text.textContent = message;
         }
 
-        function animateCounter(newValue) {
-            const counter = elements.counter;
-            const start = previousCount;
+        function animateCounter(element, newValue, prevValue) {
+            const start = prevValue;
             const end = newValue;
             const duration = 800;
             const startTime = performance.now();
@@ -313,46 +848,98 @@
                 const progress = Math.min(elapsed / duration, 1);
                 const value = Math.floor(start + (end - start) * progress);
 
-                counter.innerHTML = formatNumber(value);
+                element.innerHTML = formatNumber(value);
 
                 if (progress < 1) {
                     requestAnimationFrame(animate);
                 } else {
-                    counter.innerHTML = formatNumber(end);
+                    element.innerHTML = formatNumber(end);
                 }
             }
 
             requestAnimationFrame(animate);
-            previousCount = newValue;
         }
 
-       
+        // Initialize loading state
         updateStatus('loading', 'Menghubungkan ke sensor...');
         elements.counter.innerHTML = '<span class="loading-spinner"></span>Loading...';
+        elements.organikCount.innerHTML = '<span class="loading-spinner"></span>';
+        elements.anorganikCount.innerHTML = '<span class="loading-spinner"></span>';
 
+        // Firebase listener
         onSnapshot(jumlahRef, (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                const count = data.jumlah || 0;
+                const totalCount = data.jumlah || 0;
+                const organikCount = data.organik || 0;
+                const anorganikCount = data.anorganik || 0;
                 const unit = data.unit || 'items';
                 const lastUpdate = data.lastUpdate ? new Date(data.lastUpdate.seconds * 1000) : new Date();
 
-                animateCounter(count);
+                // Animate counters
+                animateCounter(elements.counter, totalCount, previousTotal);
+                animateCounter(elements.organikCount, organikCount, previousOrganik);
+                animateCounter(elements.anorganikCount, anorganikCount, previousAnorganik);
+
+                // Update units
                 elements.unit.textContent = unit;
+                elements.organikUnit.textContent = unit;
+                elements.anorganikUnit.textContent = unit;
+
+                // Update timestamp
                 elements.lastUpdate.textContent = formatTime(lastUpdate);
 
-                updateStats(count);
+                // Update statistics
+                updateStats(totalCount, organikCount, anorganikCount);
+
+                // Update status
                 updateStatus('online', 'Sensor online');
-                addActivity(`Data terbaru diterima (${formatNumber(count)} ${unit})`, 'success');
+
+                // Add activity log
+                const changes = [];
+                if (totalCount !== previousTotal) {
+                    changes.push(`Total: ${formatNumber(totalCount)}`);
+                }
+                if (organikCount !== previousOrganik) {
+                    changes.push(`Organik: ${formatNumber(organikCount)}`);
+                }
+                if (anorganikCount !== previousAnorganik) {
+                    changes.push(`Anorganik: ${formatNumber(anorganikCount)}`);
+                }
+
+                if (changes.length > 0) {
+                    addActivity(`Data terbaru: ${changes.join(', ')}`, 'success');
+                } else {
+                    addActivity(`Data terbaru diterima (${formatNumber(totalCount)} ${unit})`, 'success');
+                }
+
+                // Update previous values
+                previousTotal = totalCount;
+                previousOrganik = organikCount;
+                previousAnorganik = anorganikCount;
+
             } else {
+                // No data found
                 elements.counter.textContent = '-';
+                elements.organikCount.textContent = '-';
+                elements.anorganikCount.textContent = '-';
                 elements.unit.textContent = '';
+                elements.organikUnit.textContent = '';
+                elements.anorganikUnit.textContent = '';
+                
                 updateStatus('offline', 'Data tidak ditemukan');
                 addActivity('Data tidak ditemukan', 'error');
             }
         }, (error) => {
+            // Connection error
+            console.error('Firebase error:', error);
             elements.counter.textContent = '-';
+            elements.organikCount.textContent = '-';
+            elements.anorganikCount.textContent = '-';
             elements.unit.textContent = '';
+            elements.organikUnit.textContent = '';
+            elements.anorganikUnit.textContent = '';
+            
             updateStatus('offline', 'Gagal terhubung ke sensor');
             addActivity('Gagal terhubung ke sensor', 'error');
         });
